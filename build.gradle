@@ -1,0 +1,59 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+}
+
+plugins {
+    id "com.diffplug.gradle.spotless" version "3.16.0"
+    id "com.github.johnrengelman.shadow" version "4.0.3"
+}
+
+apply plugin: 'java'
+sourceCompatibility = 1.8
+
+jar {
+    baseName = 'Pterodactyl-Server-Updater'
+    version =  "${version}"
+
+    manifest {
+        attributes 'Main-Class': 'com.wurmcraft.ServerUpdater'
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile group: 'com.github.stephenc.high-scale-lib', name: 'high-scale-lib', version: '1.1.4'
+    implementation 'com.google.code.gson:gson:2.8.5'
+}
+
+spotless {
+    java {
+        googleJavaFormat('1.3')
+        trimTrailingWhitespace()
+        removeUnusedImports()
+    }
+}
+
+shadowJar.archiveName = "${archivesBaseName}-${version}.jar"
+shadowJar {
+    minimize()
+    preserveFileTimestamps = false
+    dependencies {
+        include(dependency('com.github.stephenc.high-scale-lib:high-scale-lib:1.1.4'))
+        include(dependency('com.google.code.gson:gson:2.8.5'))
+    }
+}
+
+task buildAndPackage {
+    dependsOn 'clean'
+    dependsOn 'spotlessApply'
+    dependsOn 'build'
+    shadowJar {}
+    tasks.findByName('build').mustRunAfter 'clean'
+}
