@@ -1,12 +1,22 @@
 package com.wurmcraft.json;
 
+import java.util.HashMap;
+
 public class Config {
 
-  public String API_KEY;
-  public String MODPACK_INFO_FILE;
+  // Panel
+  public String panelURL;
+  public String adminApiKey;
+  public String userApiKey;
+  public String modpackUpdateInfo;
+  public HashMap<String, String[]> serverLoginInfo;
 
-  public Config(String API_KEY, String MODPACK_INFO_FILE) {
-    this.API_KEY = API_KEY;
-    this.MODPACK_INFO_FILE = MODPACK_INFO_FILE;
+  public Config(String panelURL, String adminApiKey, String userApiKey,
+      String modpackUpdateInfo) {
+    this.panelURL = panelURL;
+    this.adminApiKey = adminApiKey;
+    this.userApiKey = userApiKey;
+    this.modpackUpdateInfo = modpackUpdateInfo;
+    this.serverLoginInfo = new HashMap<>();
   }
 }
