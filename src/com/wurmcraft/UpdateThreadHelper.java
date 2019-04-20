@@ -112,13 +112,12 @@ public class UpdateThreadHelper {
 
   private void updateServer() {
     String backupDir = rootDir + "Updater-" + currentVersion;
-    runCommand("mkdir " + backupDir);
-    runCommand("mv " + rootDir + "mods " + backupDir + "/");
-    runCommand("mv " + rootDir + "config " + backupDir + "/");
-    runCommand("mv " + rootDir + "scripts " + backupDir + "/");
-    runCommand("wget " + updateLink);
     String fileName = updateLink.substring(updateLink.lastIndexOf('/') + 1);
-    runCommand("unzip " + fileName + " -d " + rootDir);
+    runCommand("mkdir " + backupDir);
+    runCommand("wget " + ServerUpdater.SCRIPT_LINK);
+    runCommand("mv " + ServerUpdater.SCRIPT_LINK + " " + rootDir);
+    print(runCommand(
+        "./Updater.sh " + fileName + " " + backupDir + " " + currentVersion + " " + newestVersion));
   }
 
   // Copied from https://stackoverflow.com/questions/2405885/run-a-command-over-ssh-with-jsch

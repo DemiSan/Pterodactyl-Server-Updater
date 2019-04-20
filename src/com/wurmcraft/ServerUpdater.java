@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 
 public class ServerUpdater {
 
+  public static final String SCRIPT_LINK = "https://raw.githubusercontent.com/Wurmcraft/Pterodactyl-Server-Updater/master/Updater.sh";
+
   public static Config config;
   public static Gson gson = new GsonBuilder().setPrettyPrinting().create();
   public static ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
