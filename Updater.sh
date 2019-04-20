@@ -6,9 +6,9 @@
 echo "Updating from $3 to $4"
 
 # Move Older Verson to Backup-Dir
-mv mods $2
-mv config $2
-mv scripts $2
+mv ./mods/* $2
+mv ./config $2
+mv ./scripts $2
 echo "Backup Complete"
 
 # Setup Server Modpack

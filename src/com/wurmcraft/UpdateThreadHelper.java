@@ -13,6 +13,7 @@ import com.wurmcraft.curse.json.ProjectData;
 import com.wurmcraft.curse.json.ProjectData.ModFile;
 import com.wurmcraft.json.ModpackUpdate;
 import com.wurmcraft.json.ModpackUpdate.Type;
+import com.wurmcraft.utils.URLUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -111,13 +112,19 @@ public class UpdateThreadHelper {
   }
 
   private void updateServer() {
-    String backupDir = rootDir + "Updater-" + currentVersion;
+    String backupDir = rootDir + "Updater-" + currentVersion + "/";
     String fileName = updateLink.substring(updateLink.lastIndexOf('/') + 1);
     runCommand("mkdir " + backupDir);
     runCommand("wget " + ServerUpdater.SCRIPT_LINK);
-    runCommand("mv " + ServerUpdater.SCRIPT_LINK + " " + rootDir);
+    runCommand("mv Updater.sh " + rootDir);
+    runCommand("chmod +x " + rootDir + "Updater.sh ");
+    runCommand("wget " + updateLink);
+    runCommand("mv " + fileName + " " + newestVersion + ".zip");
+    fileName = newestVersion + ".zip";
+    runCommand("mv " + fileName + " " + rootDir);
     print(runCommand(
-        "./Updater.sh " + fileName + " " + backupDir + " " + currentVersion + " " + newestVersion));
+        "/" + rootDir + "Updater.sh " + rootDir + fileName + " " + backupDir + " " + currentVersion + " "
+            + newestVersion));
   }
 
   // Copied from https://stackoverflow.com/questions/2405885/run-a-command-over-ssh-with-jsch
@@ -174,19 +181,35 @@ public class UpdateThreadHelper {
       // Check for Beta
       for (ModFile file : data.latestFiles) {
         if (file.releaseType.equalsIgnoreCase("BETA")) {
-          updateLink = file.downloadURL;
+          updateLink = getServerDownloadLink(data);
           return collectFileNameToVersion(file.fileName, file.gameVersion[0]);
         }
       }
       // Check for Release
       for (ModFile file : data.latestFiles) {
         if (file.releaseType.equalsIgnoreCase("RELEASE")) {
-          updateLink = file.downloadURL;
+          updateLink = getServerDownloadLink(data);
           return collectFileNameToVersion(file.fileName, file.gameVersion[0]);
         }
       }
     }
     return "";
+  }
+
+  private String getServerDownloadLink(ProjectData data) {
+    String page = URLUtils.toString("https://minecraft.curseforge.com/projects/" + data.slug);
+    String download = "";
+    for (String line : page.split("\n")) {
+      if (line.contains("data-action=\"server-pack-download\"")) {
+        download = line;
+      }
+    }
+    download = download.replaceAll(" ", "");
+    download = download.substring(download.indexOf("href"), download.indexOf("download\""));
+    download = download.substring(download.indexOf("files"));
+    download = download.replaceAll("/", "").replaceAll("files", "");
+    return "https://minecraft.curseforge.com/projects/enigmatica2expert/files/" + download
+        + "/download";
   }
 
   private String collectFileNameToVersion(String fileName, String mcVersion) {

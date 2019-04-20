@@ -1,7 +1,6 @@
 package com.wurmcraft.utils;
 
 import com.wurmcraft.ServerUpdater;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -16,6 +15,13 @@ public class URLUtils {
 
   public static <T extends Object> T get(String url, Class<T> type) {
     if (url != null && !url.isEmpty()) {
+      return ServerUpdater.gson.fromJson(toString(url), type);
+    }
+    return null;
+  }
+
+  public static String toString(String url) {
+    if (url != null && !url.isEmpty()) {
       try {
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -25,10 +31,10 @@ public class URLUtils {
         String inputLine;
         StringBuilder response = new StringBuilder();
         while ((inputLine = in.readLine()) != null) {
-          response.append(inputLine);
+          response.append(inputLine + "\n");
         }
         in.close();
-        return ServerUpdater.gson.fromJson(response.toString(), type);
+        return response.toString();
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -41,8 +47,12 @@ public class URLUtils {
       URL url = new URL(sourceURL);
       String fileName = sourceURL.substring(sourceURL.lastIndexOf('/') + 1);
       File targetPath = new File(saveDirectory + File.separator + fileName);
-      if (!targetPath.getParentFile().exists()) targetPath.getParentFile().mkdirs();
-      if (!targetPath.exists()) targetPath.createNewFile();
+      if (!targetPath.getParentFile().exists()) {
+        targetPath.getParentFile().mkdirs();
+      }
+      if (!targetPath.exists()) {
+        targetPath.createNewFile();
+      }
       Files.copy(url.openStream(), targetPath.toPath(), StandardCopyOption.REPLACE_EXISTING);
     } catch (Exception e) {
       e.printStackTrace();
