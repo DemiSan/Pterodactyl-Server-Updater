@@ -15,6 +15,7 @@ import com.wurmcraft.json.ModpackUpdate;
 import com.wurmcraft.json.ModpackUpdate.Type;
 import com.wurmcraft.utils.URLUtils;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -141,12 +142,12 @@ public class UpdateThreadHelper {
       String line;
       while ((line = bis.readLine()) != null) {
         if (line.contains(format)) {
-          builder.append(line.replaceAll(find, replace));
+          builder.append(line.replaceAll(find, replace)+"\n");
         } else {
-          builder.append(line);
+          builder.append(line+"\n");
         }
       }
-      sftp.put(builder.toString(), name);
+      sftp.put(new ByteArrayInputStream(builder.toString().getBytes()), name);
     } catch (Exception e) {
       print(e.getLocalizedMessage());
     }
@@ -182,6 +183,7 @@ public class UpdateThreadHelper {
       // Read Modpack Version from Server-Essentials.cfg
       String modpackVersion = getModpackVersion(sftp);
       currentVersion = modpackVersion;
+      sftp.disconnect();
       if (update.updateType.equals(Type.TWITCH)) {
         return checkTwitchUpdate(update, modpackVersion);
       }
