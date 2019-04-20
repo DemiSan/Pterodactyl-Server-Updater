@@ -123,8 +123,33 @@ public class UpdateThreadHelper {
     fileName = newestVersion + ".zip";
     runCommand("mv " + fileName + " " + rootDir);
     print(runCommand(
-        "/" + rootDir + "Updater.sh " + rootDir + fileName + " " + backupDir + " " + currentVersion + " "
-            + newestVersion));
+        "/" + rootDir + "Updater.sh " + rootDir + fileName + " " + backupDir + " " + currentVersion
+            + " "
+            + newestVersion + " " + rootDir));
+    updateFile("config/ServerEssentials.cfg", "S:modpackVersion=", currentVersion, newestVersion);
+    updateFile("server.properties", "motd=", currentVersion, newestVersion);
+  }
+
+  private void updateFile(String name, String format, String find, String replace) {
+    try {
+      ChannelSftp sftp = (ChannelSftp) session.openChannel("sftp");
+      sftp.connect();
+      sftp.cd(rootDir);
+      BufferedReader bis = new BufferedReader(
+          new InputStreamReader(sftp.get(name)));
+      StringBuilder builder = new StringBuilder();
+      String line;
+      while ((line = bis.readLine()) != null) {
+        if (line.contains(format)) {
+          builder.append(line.replaceAll(find, replace));
+        } else {
+          builder.append(line);
+        }
+      }
+      sftp.put(builder.toString(), name);
+    } catch (Exception e) {
+      print(e.getLocalizedMessage());
+    }
   }
 
   // Copied from https://stackoverflow.com/questions/2405885/run-a-command-over-ssh-with-jsch
@@ -208,7 +233,8 @@ public class UpdateThreadHelper {
     download = download.substring(download.indexOf("href"), download.indexOf("download\""));
     download = download.substring(download.indexOf("files"));
     download = download.replaceAll("/", "").replaceAll("files", "");
-    return "https://minecraft.curseforge.com/projects/enigmatica2expert/files/" + download
+    return "https://minecraft.curseforge.com/projects/%PROJECT%/files/"
+        .replaceAll("%PROJECT%", data.slug) + download
         + "/download";
   }
 
