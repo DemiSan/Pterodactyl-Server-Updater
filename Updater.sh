@@ -13,7 +13,7 @@ mv ./scripts $2
 echo "Backup Complete"
 
 # Setup Server Modpack
-unzip -o $1
+unzip -o $1 -d $5
 echo "Unzip Finished"
 rm -rf $1
 
