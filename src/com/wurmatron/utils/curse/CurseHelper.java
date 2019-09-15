@@ -99,29 +99,30 @@ public class CurseHelper {
     return "";
   }
 
-  public static String getServerDownloadLink(ModpackUpdate update, String currentVersion) {
-    String twitchCurrentVersion = getNewestVersion(update.updateURL);
-    if (!twitchCurrentVersion.equalsIgnoreCase(currentVersion)) {
-      ProjectData data = CurseHelper.loadProjectData(Long.parseLong(update.updateURL));
-      return getServerDownloadLink(data);
+  public static String getServerDownloadLink(ModpackUpdate update, String newestVersion) {
+    ProjectData data = CurseHelper.loadProjectData(Long.parseLong(update.updateURL));
+    String fileID = "";
+    for (ModFile file : data.latestFiles) {
+      if (file.fileName.contains(newestVersion)) {
+        fileID = "" + file.id;
+      }
     }
-    return "";
+    return getServerDownloadLink(data, newestVersion, fileID);
   }
 
-  private static String getServerDownloadLink(ProjectData data) {
-    String page = URLUtils.toString("https://minecraft.curseforge.com/projects/" + data.slug);
+  private static String getServerDownloadLink(ProjectData data, String version, String fileID) {
+    String page = URLUtils.toString("https://www.curseforge.com/minecraft/modpacks/" + data.slug + "/files/" + fileID);
     String download = "";
     for (String line : page.split("\n")) {
-      if (line.contains("data-action=\"server-pack-download\"")) {
+      if (line.contains("modpack-file-link") && line.contains(version) && line.contains("Server")) {
         download = line;
       }
     }
     download = download.replaceAll(" ", "");
-    download = download.substring(download.indexOf("href"), download.indexOf("download\""));
+    download = download.substring(download.indexOf("href"), download.indexOf("\"data-action="));
     download = download.substring(download.indexOf("files"));
     download = download.replaceAll("/", "").replaceAll("files", "");
-    return "https://minecraft.curseforge.com/projects/%PROJECT%/files/"
-        .replaceAll("%PROJECT%", data.slug) + download
-        + "/download";
+    return "https://www.curseforge.com/minecraft/modpacks/%PROJECT%/download/"
+        .replaceAll("%PROJECT%", data.slug) + download;
   }
 }

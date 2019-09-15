@@ -58,8 +58,6 @@ public class Updater {
       if (isValidServerForUpdater(server)) {
         ServerStatus status = getServerStatus(currentStatus, server);
         if (status != null) {
-          System.out
-              .println("Auto-Updater has been enabled for '" + server.getName() + " (" + server.getUuid() + ") on " + server.getNode().getName());
           // Check / Collect SFTP Login Info
           ServerSFTPSettings settings = config.getSFTPSettings(server);
           if (settings == null) {
@@ -70,6 +68,8 @@ public class Updater {
             config.serverSFTPSettings.add(settings);
             Config.save(configSaveLocation, config);
           }
+          System.out
+              .println("Auto-Updater has been enabled for '" + server.getName() + " (" + server.getUuid() + ") on " + server.getNode().getName());
           EXECUTOR.scheduleAtFixedRate(createServerUpdater(server), 0, config.updatePeriod, TimeUnit.MINUTES);
         } else {
           System.out.println("Unable to find server '" + server.getName() + " (" + server.getUuid() + ") on SE Rest API");
@@ -115,7 +115,8 @@ public class Updater {
           String newestVersion = CurseHelper.getNewestVersion(update.updateURL);
           System.out.printf("[%s]: %s", server.getName(), "Current Version: " + status.version + " | Latest Version: " + newestVersion + "\n");
           if (!status.version.equalsIgnoreCase(newestVersion)) {
-            System.out.printf("[%s]: %s", server.getName(), "Update Found!");
+            String serverUpdateURL = CurseHelper.getServerDownloadLink(update, newestVersion);
+            System.out.println("Download link: " + serverUpdateURL);
           }
         }
       } catch (Exception e) {
