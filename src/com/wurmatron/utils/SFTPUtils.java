@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 
 public class SFTPUtils {
 
-  private ModpackUpdate getModpackUpdater(ChannelSftp sftp) {
+  public static final ModpackUpdate getModpackUpdater(ChannelSftp sftp) {
     try (InputStream is = sftp.get("Update.json")) {
       InputStreamReader isr = new InputStreamReader(is);
       BufferedReader br = new BufferedReader(isr);
@@ -25,5 +25,4 @@ public class SFTPUtils {
     }
     return null;
   }
-
 }

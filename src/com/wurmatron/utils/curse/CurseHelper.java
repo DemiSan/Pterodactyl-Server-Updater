@@ -1,9 +1,13 @@
 package com.wurmatron.utils.curse;
 
+import com.stanjg.ptero4j.entities.panel.admin.Server;
+import com.wurmatron.json.ModpackUpdate;
 import com.wurmatron.utils.curse.json.ProjectData;
 import com.wurmatron.utils.curse.json.ProjectData.ModFile;
 import com.wurmatron.utils.URLUtils;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CurseHelper {
 
@@ -56,7 +60,7 @@ public class CurseHelper {
     ProjectData projectData = loadProjectData(projectID);
     ModFile newestFile = projectData.latestFiles.get(0);
     for (ModFile file : projectData.latestFiles) {
-      if (newestFile.fileDate < file.fileDate) {
+      if (newestFile.fileDate.dayOfYear < file.fileDate.dayOfYear && newestFile.fileDate.year < file.fileDate.year) {
         newestFile = file;
       }
     }
@@ -64,5 +68,60 @@ public class CurseHelper {
     return newestFile.id;
   }
 
+  public static String getNewestVersion(String curseID) {
+    ProjectData data = CurseHelper.loadProjectData(Long.parseLong(curseID));
+    if (data.latestFiles.size() > 0) {
+      // Check for Beta
+      for (ModFile file : data.latestFiles) {
+        if (file.releaseType.equalsIgnoreCase("BETA")) {
+          return collectFileNameToVersion(file.fileName, file.gameVersion[0]);
+        }
+      }
+      // Check for Release
+      for (ModFile file : data.latestFiles) {
+        if (file.releaseType.equalsIgnoreCase("RELEASE")) {
+          return collectFileNameToVersion(file.fileName, file.gameVersion[0]);
+        }
+      }
+    }
+    return "";
+  }
 
+  private static String collectFileNameToVersion(String fileName, String mcVersion) {
+    Pattern pattern = Pattern.compile(".\\.(.*)");
+    Matcher matcher = pattern.matcher(fileName);
+    if (matcher.find()) {
+      String versionUnfiltered = matcher.group();
+      versionUnfiltered = versionUnfiltered.replaceAll(".zip", "");
+      versionUnfiltered = versionUnfiltered.replaceAll(mcVersion, "");
+      return versionUnfiltered;
+    }
+    return "";
+  }
+
+  public static String getServerDownloadLink(ModpackUpdate update, String currentVersion) {
+    String twitchCurrentVersion = getNewestVersion(update.updateURL);
+    if (!twitchCurrentVersion.equalsIgnoreCase(currentVersion)) {
+      ProjectData data = CurseHelper.loadProjectData(Long.parseLong(update.updateURL));
+      return getServerDownloadLink(data);
+    }
+    return "";
+  }
+
+  private static String getServerDownloadLink(ProjectData data) {
+    String page = URLUtils.toString("https://minecraft.curseforge.com/projects/" + data.slug);
+    String download = "";
+    for (String line : page.split("\n")) {
+      if (line.contains("data-action=\"server-pack-download\"")) {
+        download = line;
+      }
+    }
+    download = download.replaceAll(" ", "");
+    download = download.substring(download.indexOf("href"), download.indexOf("download\""));
+    download = download.substring(download.indexOf("files"));
+    download = download.replaceAll("/", "").replaceAll("files", "");
+    return "https://minecraft.curseforge.com/projects/%PROJECT%/files/"
+        .replaceAll("%PROJECT%", data.slug) + download
+        + "/download";
+  }
 }

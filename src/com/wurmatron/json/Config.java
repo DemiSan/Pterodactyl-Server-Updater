@@ -1,5 +1,6 @@
 package com.wurmatron.json;
 
+import com.stanjg.ptero4j.entities.panel.admin.Server;
 import com.wurmatron.utils.FileUtils;
 import com.wurmatron.Updater;
 import java.io.File;
@@ -8,6 +9,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Base64;
+import java.util.List;
 import java.util.Scanner;
 
 public class Config {
@@ -21,6 +23,8 @@ public class Config {
   public String restAuth;
   // Program Settings
   public int updatePeriod;
+  // Server SFTP Settings
+  public List<ServerSFTPSettings> serverSFTPSettings;
 
   public static Config createNewConfig(String config) {
     Config cfg = new Config();
@@ -49,7 +53,7 @@ public class Config {
               System.out.print("Enter the value for '" + field.getName() + "': ");
             }
           }
-        } else {
+        } else if (!field.getName().endsWith("Settings")) {
           field.set(config, sc.nextLine().replaceAll(" ", ""));
           System.out.print("\n");
         }
@@ -86,6 +90,17 @@ public class Config {
     } else {
       return Config.createNewConfig(config);
     }
+  }
+
+  public ServerSFTPSettings getSFTPSettings(Server server) {
+    if (serverSFTPSettings != null && !serverSFTPSettings.isEmpty()) {
+      for (ServerSFTPSettings settings : serverSFTPSettings) {
+        if (server.getUuid().equalsIgnoreCase(settings.serverUUID)) {
+          return settings;
+        }
+      }
+    }
+    return null;
   }
 
 }

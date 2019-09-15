@@ -38,9 +38,9 @@ public class ProjectData {
   public String gameName;
   public String portalName;
   public String sectionName;
-  public long dateModified;
-  public String dateCreated;
-  public long dateReleased;
+  public FileDate dateModified;
+  public FileDate dateCreated;
+  public FileDate dateReleased;
   public String categoryList;
   public boolean available;
 
@@ -79,9 +79,9 @@ public class ProjectData {
       String gameName,
       String portalName,
       String sectionName,
-      long dateModified,
-      String dateCreated,
-      long dateReleased,
+      FileDate dateModified,
+      FileDate dateCreated,
+      FileDate dateReleased,
       String categoryList,
       boolean available) {
     this.id = id;
@@ -146,7 +146,7 @@ public class ProjectData {
     public long id;
     public String fileName;
     public String fileNameOnDisk;
-    public long fileDate;
+    public FileDate fileDate;
     public String releaseType;
     public String fileStatus;
     public String downloadURL;
@@ -159,6 +159,70 @@ public class ProjectData {
     public long fileLength;
     public boolean alternate;
     public boolean available;
+
+    public ModFile(long id, String fileName, String fileNameOnDisk, FileDate fileDate, String releaseType, String fileStatus,
+        String downloadURL, long alternativeFileId, List<Dependencicy> dependencies,
+        List<Module> modules, long packageFingerprlong, String[] gameVersion, String installMetadata, long fileLength, boolean alternate,
+        boolean available) {
+      this.id = id;
+      this.fileName = fileName;
+      this.fileNameOnDisk = fileNameOnDisk;
+      this.fileDate = fileDate;
+      this.releaseType = releaseType;
+      this.fileStatus = fileStatus;
+      this.downloadURL = downloadURL;
+      this.alternativeFileId = alternativeFileId;
+      this.dependencies = dependencies;
+      this.modules = modules;
+      this.packageFingerprlong = packageFingerprlong;
+      this.gameVersion = gameVersion;
+      this.installMetadata = installMetadata;
+      this.fileLength = fileLength;
+      this.alternate = alternate;
+      this.available = available;
+    }
+  }
+
+  public class FileDate {
+
+    public int year;
+    public String month;
+    public int dayOfMonth;
+    public String dayOfWeek;
+    public int dayOfYear;
+    public int nano;
+    public int second;
+    public int monthValue;
+    public int hour;
+    public int minute;
+    public Chronolgy chronology;
+
+    public FileDate(int year, String month, int dayOfMonth, String dayOfWeek, int dayOfYear, int nano, int second, int monthValue, int hour,
+        int minute,
+        Chronolgy chronology) {
+      this.year = year;
+      this.month = month;
+      this.dayOfMonth = dayOfMonth;
+      this.dayOfWeek = dayOfWeek;
+      this.dayOfYear = dayOfYear;
+      this.nano = nano;
+      this.second = second;
+      this.monthValue = monthValue;
+      this.hour = hour;
+      this.minute = minute;
+      this.chronology = chronology;
+    }
+  }
+
+  public class Chronolgy {
+
+    public String calendarType;
+    public String id;
+
+    public Chronolgy(String calendarType, String id) {
+      this.calendarType = calendarType;
+      this.id = id;
+    }
   }
 
   public class Dependencicy {
