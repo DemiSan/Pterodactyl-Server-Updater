@@ -23,7 +23,8 @@ public class Config {
   public String restAuth;
   // Program Settings
   public int updatePeriod;
-  // Server SFTP Settings
+  // Server SSH / SFTP Settings
+  public List<ServerSSHSettings> serverSSHSettings;
   public List<ServerSFTPSettings> serverSFTPSettings;
 
   public static Config createNewConfig(String config) {
@@ -90,6 +91,17 @@ public class Config {
     } else {
       return Config.createNewConfig(config);
     }
+  }
+
+  public ServerSSHSettings getSHHSettings(Server server) {
+    if (serverSSHSettings != null && !serverSSHSettings.isEmpty()) {
+      for (ServerSSHSettings settings : serverSSHSettings) {
+        if (server.getUuid().equalsIgnoreCase(settings.serverUUID)) {
+          return settings;
+        }
+      }
+    }
+    return null;
   }
 
   public ServerSFTPSettings getSFTPSettings(Server server) {

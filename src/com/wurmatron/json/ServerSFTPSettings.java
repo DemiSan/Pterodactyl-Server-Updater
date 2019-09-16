@@ -12,7 +12,7 @@ public class ServerSFTPSettings {
   public String password;
   public String rootDir;
 
-  public ServerSFTPSettings() {
+  private ServerSFTPSettings() {
   }
 
   public ServerSFTPSettings(String serverUUID, String url, int port, String username, String password, String rootDir) {
@@ -25,7 +25,10 @@ public class ServerSFTPSettings {
   }
 
   public static ServerSFTPSettings askForSettings(ServerSFTPSettings settings) {
+    if(settings == null)
+      settings = new ServerSFTPSettings();
     Scanner sc = new Scanner(System.in);
+    System.out.println("SFTP Config");
     for (Field field : settings.getClass().getDeclaredFields()) {
       System.out.print("Enter the value for '" + field.getName() + "': ");
       try {

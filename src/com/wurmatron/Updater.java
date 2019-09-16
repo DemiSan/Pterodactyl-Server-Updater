@@ -2,9 +2,10 @@ package com.wurmatron;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.stanjg.ptero4j.PteroAdminAPI;
 import com.stanjg.ptero4j.PteroUserAPI;
@@ -15,10 +16,12 @@ import com.wurmatron.json.ModpackUpdate.Type;
 import com.wurmatron.json.RequestGenerator;
 import com.wurmatron.json.RequestGenerator.Status;
 import com.wurmatron.json.ServerSFTPSettings;
+import com.wurmatron.json.ServerSSHSettings;
 import com.wurmatron.json.ServerStatus;
 import com.wurmatron.json.Validation;
 import com.wurmatron.utils.SFTPUtils;
 import com.wurmatron.utils.curse.CurseHelper;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -58,14 +61,24 @@ public class Updater {
       if (isValidServerForUpdater(server)) {
         ServerStatus status = getServerStatus(currentStatus, server);
         if (status != null) {
+          // Check / Collect SSH Login Info
+          ServerSSHSettings sshSettings = config.getSHHSettings(server);
+          if (sshSettings == null) {
+            sshSettings = ServerSSHSettings.askForSettings(null);
+            if (config.serverSSHSettings == null) {
+              config.serverSSHSettings = new ArrayList<>();
+            }
+            config.serverSSHSettings.add(sshSettings);
+            Config.save(configSaveLocation, config);
+          }
           // Check / Collect SFTP Login Info
-          ServerSFTPSettings settings = config.getSFTPSettings(server);
-          if (settings == null) {
-            settings = ServerSFTPSettings.askForSettings(new ServerSFTPSettings());
+          ServerSFTPSettings sftpSettings = config.getSFTPSettings(server);
+          if (sftpSettings == null) {
+            sftpSettings = ServerSFTPSettings.askForSettings(null);
             if (config.serverSFTPSettings == null) {
               config.serverSFTPSettings = new ArrayList<>();
             }
-            config.serverSFTPSettings.add(settings);
+            config.serverSFTPSettings.add(sftpSettings);
             Config.save(configSaveLocation, config);
           }
           System.out
@@ -100,31 +113,56 @@ public class Updater {
     return () -> {
       Thread.currentThread().setName(server.getName() + " Auto-Updater");
       ServerStatus status = getServerStatus(server);
-      ServerSFTPSettings settings = config.getSFTPSettings(server);
-      Session session = null;
+      ServerSSHSettings sshSettings = config.getSHHSettings(server);
+      ServerSFTPSettings sftpSettings = config.getSFTPSettings(server);
+      Session sftpSession = null;
+      Session sshSession = null;
       try {
-        session = new JSch().getSession(settings.username, settings.url, settings.port);
-        session.setPassword(settings.password);
-        session.setConfig("StrictHostKeyChecking", "no");
-        session.connect(50000);
-        ChannelSftp sftp = (ChannelSftp) session.openChannel("sftp");
-        sftp.connect();
-        sftp.cd(settings.rootDir);
+        // SFTP
+        sftpSession = new JSch().getSession(sftpSettings.username, sftpSettings.url, sftpSettings.port);
+        sftpSession.setPassword(sftpSettings.password);
+        sftpSession.setConfig("StrictHostKeyChecking", "no");
+        sftpSession.connect(50000);
+        ChannelSftp sftp = (ChannelSftp) sftpSession.openChannel("sftp");
+        try {
+          sftp.connect();
+          System.out.printf("[%s]: %s", server.getName(), "Connect to SFTP\n");
+        } catch (Exception e) {
+          System.out.printf("[%s]: %s", server.getName(), "Failed to connect to SFTP\n");
+        }
+        sftp.cd(sftpSettings.rootDir);
         ModpackUpdate update = SFTPUtils.getModpackUpdater(sftp);
+        sftp.disconnect();
+        // SSH
+        sshSession = new JSch().getSession(sshSettings.username, sshSettings.host, sshSettings.port);
+        sshSession.setPassword(sshSettings.password);  // No Key Support
+        sshSession.setConfig("StrictHostKeyChecking", "no");
+        sshSession.connect(50000);
+        ChannelExec ssh = (ChannelExec) sshSession.openChannel("exec");
+        ssh.setErrStream(System.out);
+        ssh.setInputStream(null);
+        try {
+          ssh.connect();
+          System.out.printf("[%s]: %s", server.getName(), "Connect to SSH\n");
+        } catch (Exception e) {
+          System.out.printf("[%s]: %s", server.getName(), "Failed to connect to SSH\n");
+        }
         if (update.updateType == Type.TWITCH) {
           String newestVersion = CurseHelper.getNewestVersion(update.updateURL);
           System.out.printf("[%s]: %s", server.getName(), "Current Version: " + status.version + " | Latest Version: " + newestVersion + "\n");
           if (!status.version.equalsIgnoreCase(newestVersion)) {
             String serverUpdateURL = CurseHelper.getServerDownloadLink(update, newestVersion);
-            System.out.println("Download link: " + serverUpdateURL);
+            System.out.printf("[%s]: %s", server.getName(), "Downloading " + serverUpdateURL + " to " + sshSettings.rootDir);
+            ssh.setCommand("wget " + serverUpdateURL + "-O " + sshSettings.rootDir + (newestVersion + ".zip"));
           }
         }
+        ssh.disconnect();
       } catch (Exception e) {
         System.out.printf("[%s]: %s", server.getName(), e.getMessage());
       } finally {
-        session.disconnect();
+        sftpSession.disconnect();
+        sshSession.disconnect();
       }
-
     };
   }
 }
