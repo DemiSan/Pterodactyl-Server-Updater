@@ -3,6 +3,8 @@ package io.wurmatron;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.wurmatron.ptredactyl.Ptredactyl;
+import io.wurmatron.rest.Rest;
+import io.wurmatron.sftp.SFTPController;
 import java.io.File;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
@@ -20,20 +22,22 @@ public class Updater {
 
   // Instances
   public static Ptredactyl ptero;
+  public static Rest rest;
+  public static SFTPController sftp;
 
   // 0 = Config File Location
   public static void main(String[] args) {
     // Load Config
     if (args.length == 0) {
-      config = loadConfig("config.json");
+      config = Config.load(new File("config.json"));
     } else {
-      config = loadConfig(args[0]);
+      config = Config.load(new File(args[0]));
     }
-    ptero = new Ptredactyl(config.baseURL, config.userAuthKey, config.adminAuthKey);
+    ptero = new Ptredactyl(config.panelBaseURL, config.userAuthKey, config.adminAuthKey);
     System.out.println("Pterodactyl API Loaded!");
-  }
-
-  public static Config loadConfig(String file) {
-    return new Config(new File(file));
+    rest = new Rest(config.restBaseURL, config.restAuthToken);
+    sftp = new SFTPController(config.servers);
+    System.out.println("SFTP Loaded!");
+    System.out.println("Loading Finished!");
   }
 }

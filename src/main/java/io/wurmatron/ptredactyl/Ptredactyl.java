@@ -2,6 +2,7 @@ package io.wurmatron.ptredactyl;
 
 import com.stanjg.ptero4j.PteroAdminAPI;
 import com.stanjg.ptero4j.PteroUserAPI;
+import com.stanjg.ptero4j.entities.panel.admin.Server;
 import io.wurmatron.Updater;
 import io.wurmatron.utils.UserInput;
 
@@ -9,7 +10,6 @@ public class Ptredactyl {
 
   public static PteroAdminAPI adminAPI;
   public static PteroUserAPI userAPI;
-
 
   public Ptredactyl(String baseURL, String userAPIKey, String adminAPIKey) {
     if (baseURL != null && !baseURL.isEmpty() && userAPIKey != null && !userAPIKey.isEmpty()
@@ -28,11 +28,11 @@ public class Ptredactyl {
       }
     } else {
       System.out.println("Pterodactyl settings have not been set or are invalid!");
-      baseURL = UserInput.askAndGetInput("Enter the panel URL: ");
+      baseURL = UserInput.askAndGetInput("Enter the panel URL: ").replaceAll(" ", "");
       String[] apiKeys = collectTokens();
       userAPIKey = apiKeys[0];
       adminAPIKey = apiKeys[1];
-      Updater.config.baseURL = baseURL;
+      Updater.config.panelBaseURL = baseURL;
       Updater.config.userAuthKey = userAPIKey;
       Updater.config.adminAuthKey = adminAPIKey;
       Updater.config.save();
@@ -41,9 +41,13 @@ public class Ptredactyl {
 
   // 0 = User API Key
   // 1 = Admin API Key
-  public String[] collectTokens() {
+  private String[] collectTokens() {
     return new String[]{
         UserInput.askAndGetInput("Enter the Pterodactyl User API Key: "),
         UserInput.askAndGetInput("Enter the Pterodactyl Admin API Key: ")};
+  }
+
+  public Server[] getServerList() {
+    return adminAPI.getServersController().getAllServers().toArray(new Server[0]);
   }
 }
