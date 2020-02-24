@@ -2,7 +2,10 @@ package io.wurmatron.ptredactyl;
 
 import com.stanjg.ptero4j.PteroAdminAPI;
 import com.stanjg.ptero4j.PteroUserAPI;
+import com.stanjg.ptero4j.actions.PteroVoidAction;
+import com.stanjg.ptero4j.entities.objects.server.ServerUsage;
 import com.stanjg.ptero4j.entities.panel.admin.Server;
+import com.stanjg.ptero4j.entities.panel.user.UserServer;
 import io.wurmatron.Updater;
 import io.wurmatron.utils.UserInput;
 
@@ -49,5 +52,10 @@ public class Ptredactyl {
 
   public Server[] getServerList() {
     return adminAPI.getServersController().getAllServers().toArray(new Server[0]);
+  }
+
+  public static UserServer getServerFromUUID(String uuid) {
+    PteroUserAPI user = new PteroUserAPI(Updater.config.panelBaseURL, Updater.config.userAuthKey);
+    return user.getServersController().getServer(uuid);
   }
 }
